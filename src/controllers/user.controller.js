@@ -47,7 +47,7 @@ export const handleUpdateUser = handlerAsync(async (req, res, next) => {
   if (!userExist) return next(new AppError("user not found", 404));
   let user = {};
   if (req.file) {
-    const alldata = { ...req.body, pic: req.file.path };
+    const alldata = { ...req.body, pic: req.file.filename };
     user = await userModel.findByIdAndUpdate(
       req.user._id,
       { ...alldata },

@@ -8,6 +8,7 @@ import { validate } from "../middleware/validation/execution.js";
 import {
   loginSchema,
   registerSchema,
+  updateUserSchema,
 } from "../middleware/validation/schema.js";
 import { auth } from "../middleware/auth/auth.js";
 import { multer4server } from "../services/multer.js";
@@ -20,6 +21,8 @@ userRoutes.put(
   "/update",
   multer4server().single("image"),
   auth(["customer", "staff", "admin"]),
+  validate(updateUserSchema),
+
   handleUpdateUser
 );
 

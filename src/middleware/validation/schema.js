@@ -17,8 +17,6 @@ export const loginSchema = Joi.object({
 });
 export const updateUserSchema = Joi.object({
   email: Joi.string().email().required(),
-  name: Joi.string().required().min(6).max(30),
-
+  name: Joi.string().required().min(3).max(30),
   phone: Joi.string().pattern(phoneRegex, "invalid").required(),
-  
 });
