@@ -12,14 +12,15 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/v1/auth", userRoutes);
+app.get("/", (req, res) => {
+  console.log("hello Ahmed");
+});
 // handle foriegn routes
+
 app.all("*", (req, res, next) => {
   next(new AppError(`invalid url ${req.originalUrl}`, 404));
 });
 
-app.get("/", (req, res) => {
-  console.log("hello Ahmed");
-});
 //global handle error
 app.use((err, req, res, next) => {
   if (err)
