@@ -1,0 +1,31 @@
+import dotenv from "dotenv";
+dotenv.config();
+import cors from "cors";
+import express from "express";
+import connection from "./DataBase/connection.js";
+import { AppError } from "./src/utilities/AppError.js";
+import userRoutes from "./src/Routes/user.routes.js";
+
+connection();
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+app.use("/api/v1/auth", userRoutes);
+// handle foriegn routes
+app.all("*", (req, res, next) => {
+  next(new AppError(`invalid url ${req.originalUrl}`, 404));
+});
+
+app.get("/", (req, res) => {
+  console.log("hello Ahmed");
+});
+//global handle error
+app.use((err, req, res, next) => {
+  if (err)
+    return res.status(err.statusCode || 400).json({ message: err.message });
+});
+const myport = process.env.PORT || 5000;
+app.listen(myport, () => {
+  console.log(`server on port ${myport} `);
+});
