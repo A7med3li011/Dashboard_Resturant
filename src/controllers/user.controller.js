@@ -40,3 +40,26 @@ export const handleLogin = handlerAsync(async (req, res, next) => {
     return next(new AppError("email is not exsit", 404));
   }
 });
+
+export const handleUpdateUser = handlerAsync(async (req, res, next) => {
+  const userExist = await userModel.findById({ _id: req.user._id });
+
+  if (!userExist) return next(new AppError("user not found", 404));
+  let user = {};
+  if (req.file) {
+    const alldata = { ...req.body, pic: req.file.path };
+    user = await userModel.findByIdAndUpdate(
+      req.user._id,
+      { ...alldata },
+      { new: true }
+    );
+  } else {
+    user = await userModel.findByIdAndUpdate(
+      req.user._id,
+      { ...req.body },
+      { new: true }
+    );
+  }
+
+  res.status(200).json({ message: "user updated successfully", data: user });
+});

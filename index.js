@@ -6,15 +6,18 @@ import connection from "./DataBase/connection.js";
 import { AppError } from "./src/utilities/AppError.js";
 import userRoutes from "./src/Routes/user.routes.js";
 
+import path from "path";
+
 connection();
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Make 'uploads' folder publicly accessible
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
 app.use("/api/v1/auth", userRoutes);
-app.get("/", (req, res) => {
-  console.log("hello Ahmed");
-});
+
 // handle foriegn routes
 
 app.all("*", (req, res, next) => {
