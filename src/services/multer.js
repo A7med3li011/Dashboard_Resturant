@@ -1,21 +1,25 @@
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 
-// Configure storage for uploading files
+// Ensure 'uploads' folder exists
+const uploadDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
+
+// Configure storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // Specify the folder where files should be uploaded
-    cb(null, "uploads/"); // Make sure the 'uploads' folder exists
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    // Set the filename for the uploaded file
-    cb(null, Date.now() + path.extname(file.originalname)); // Adds a timestamp to the filename
+    cb(null, Date.now() + path.extname(file.originalname));
   },
 });
 
 export const multer4server = () => {
   function fileFilter(req, file, cb) {
-    // Check if the file is an image
     if (file.mimetype.startsWith("image")) {
       cb(null, true);
     } else {
@@ -24,10 +28,10 @@ export const multer4server = () => {
   }
 
   const upload = multer({
-    storage: storage,
-    fileFilter: fileFilter,
+    storage,
+    fileFilter,
     limits: {
-      fileSize: 500 * 1024 * 1024, // Limit to 500 MB (adjust as needed)
+      fileSize: 500 * 1024 * 1024, // 500 MB
     },
   });
 
