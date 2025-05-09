@@ -20,3 +20,18 @@ export const updateUserSchema = Joi.object({
   name: Joi.string().required().min(3).max(30),
   phone: Joi.string().pattern(phoneRegex, "invalid").required(),
 });
+export const categorySchema = Joi.object({
+  title: Joi.string().required().min(4).max(20),
+});
+export const updateCategorySchema = Joi.object({
+  title: Joi.string().required().min(4).max(20),
+  categoryId: Joi.string()
+    .custom((value, helpers) => {
+      // Check if the categoryId is a valid ObjectId
+      if (!mongoose.Types.ObjectId.isValid(value)) {
+        return helpers.message("Category ID must be a valid ObjectId");
+      }
+      return value;
+    })
+    .required(),
+});

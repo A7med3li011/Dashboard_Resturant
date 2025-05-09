@@ -6,7 +6,8 @@ import connection from "./DataBase/connection.js";
 import { AppError } from "./src/utilities/AppError.js";
 import userRoutes from "./src/Routes/user.routes.js";
 
-import path from "path";
+
+import categoryRoutes from "./src/Routes/category.routes.js";
 
 connection();
 const app = express();
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
 app.use("/api/v1/auth", userRoutes);
+app.use("/api/v1/category", categoryRoutes);
 
 // handle foriegn routes
 
