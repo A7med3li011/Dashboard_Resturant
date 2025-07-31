@@ -1,4 +1,5 @@
 import categoryModel from "../../DataBase/models/category.model.js";
+import productModel from "../../DataBase/models/product.model.js";
 import subCategoryModel from "../../DataBase/models/subCategory.model.js";
 import { deleteUploadedFile } from "../services/deleteFile.js";
 import { AppError } from "../utilities/AppError.js";
@@ -64,6 +65,23 @@ export const deleteSubCategory = handlerAsync(async (req, res, next) => {
 
 export const getSubCategories = handlerAsync(async (req, res, next) => {
   const Subcategories = await subCategoryModel.find();
+  let arr = [];
+  for (const subCat of Subcategories) {
+    let obj = { ...subCat.toObject() };
+    const products = await productModel.countDocuments({
+      subCategory: subCat._id,
+    });
+    obj.products = products;
+    arr.push(obj);
+  }
 
-  res.status(200).json({ message: "success", data: Subcategories });
+  res.status(200).json({ message: "success", data: arr });
 });
+export const getSubCategoriesbyCategory = handlerAsync(
+  async (req, res, next) => {
+    const { categoryId } = req.params;
+    const Subcategories = await subCategoryModel.find({ category: categoryId });
+
+    res.status(200).json({ message: "success", data: Subcategories });
+  }
+);

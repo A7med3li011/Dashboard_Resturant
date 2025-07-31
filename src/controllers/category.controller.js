@@ -1,4 +1,6 @@
 import categoryModel from "../../DataBase/models/category.model.js";
+import productModel from "../../DataBase/models/product.model.js";
+import subCategoryModel from "../../DataBase/models/subCategory.model.js";
 import { deleteUploadedFile } from "../services/deleteFile.js";
 import { AppError } from "../utilities/AppError.js";
 import { handlerAsync } from "../utilities/handleAsync.js";
@@ -55,6 +57,29 @@ export const deleteCategory = handlerAsync(async (req, res, next) => {
 
 export const getCategories = handlerAsync(async (req, res, next) => {
   const categories = await categoryModel.find();
+  let data = [];
+  for (const category of categories) {
+    let obj = {
+      ...category.toObject(),
+    };
+
+    const subCategories = await subCategoryModel.countDocuments({
+      category: category._id,
+    });
+    obj.numsubCategory = subCategories;
+    const dishes = await productModel.countDocuments({
+      category: category._id,
+    });
+    obj.products = dishes;
+    data.push(obj);
+  }
+
+  res.status(200).json({ message: "success", data });
+});
+
+export const getCategoryByid = handlerAsync(async (req, res, next) => {
+  const categories = await categoryModel.findById(req.params.id);
+  if (!categories) return next(new AppError("category not exist", 404));
 
   res.status(200).json({ message: "success", data: categories });
 });

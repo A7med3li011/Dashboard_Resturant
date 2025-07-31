@@ -8,6 +8,10 @@ import userRoutes from "./src/Routes/user.routes.js";
 
 import categoryRoutes from "./src/Routes/category.routes.js";
 import subCategoryRoutes from "./src/Routes/subCategory.routes.js";
+import proudctRoutes from "./src/Routes/product.routes.js";
+import kitchenRotes from "./src/Routes/kitchen.routes.js";
+import orderRoutes from "./src/Routes/order.routes.js";
+import tablesRoutes from "./src/Routes/tables.routes.js";
 
 connection();
 const app = express();
@@ -20,6 +24,10 @@ app.use("/uploads", express.static("uploads"));
 app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/category", categoryRoutes);
 app.use("/api/v1/subcategory", subCategoryRoutes);
+app.use("/api/v1/product", proudctRoutes);
+app.use("/api/v1/kitchen", kitchenRotes);
+app.use("/api/v1/order", orderRoutes);
+app.use("/api/v1/tables", tablesRoutes);
 
 // handle foriegn routes
 

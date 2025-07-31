@@ -7,14 +7,19 @@ const userSchema = new mongoose.Schema(
     password: { type: String },
     pic: { type: String },
     phone: { type: String },
+    salary: { type: Number },
+    shiftFrom: { type: String },
+    shiftTo: { type: String },
+    age: { type: Number },
 
     role: {
       type: String,
-      enum: ["admin", "staff", "customer"],
+      enum: ["admin", "staff", "customer", "operation", "waiter"],
       default: "customer",
     },
-    // hisOrders: [],
+    permissions: [{ type: String }],
   },
+
   { timestamps: true }
 );
 
