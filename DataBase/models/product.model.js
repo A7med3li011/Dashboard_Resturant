@@ -32,6 +32,11 @@ const productSchema = new mongoose.Schema({
   description: {
     type: String,
   },
+  kitchen: {
+    type: mongoose.Types.ObjectId,
+    ref: "kitchen",
+    required: true,
+  },
 });
 
 const productModel = mongoose.model("Product", productSchema);

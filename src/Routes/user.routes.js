@@ -1,5 +1,10 @@
 import express from "express";
 import {
+  delet_staff,
+  handle_add_staff,
+  handle_update_staff,
+  handlegetAllStaff,
+  handlegetUser,
   handleLogin,
   handleRegister,
   handleUpdateUser,
@@ -8,6 +13,8 @@ import { validate } from "../middleware/validation/execution.js";
 import {
   loginSchema,
   registerSchema,
+  staffValidationSchema,
+  updatestaffValidationSchema,
   updateUserSchema,
 } from "../middleware/validation/schema.js";
 import { auth } from "../middleware/auth/auth.js";
@@ -16,6 +23,19 @@ import { multer4server } from "../services/multer.js";
 const userRoutes = express.Router();
 
 userRoutes.post("/register", validate(registerSchema), handleRegister);
+userRoutes.get("/getuser/:id", handlegetUser);
+userRoutes.post(
+  "/addStaff",
+  auth(["admin"]),
+  validate(staffValidationSchema),
+  handle_add_staff
+);
+userRoutes.put(
+  "/updateStaff/:id",
+  auth(["admin"]),
+  validate(updatestaffValidationSchema),
+  handle_update_staff
+);
 userRoutes.post("/login", validate(loginSchema), handleLogin);
 userRoutes.put(
   "/update",
@@ -25,5 +45,12 @@ userRoutes.put(
 
   handleUpdateUser
 );
+userRoutes.get(
+  "/staff",
 
+  auth(["staff", "admin"]),
+
+  handlegetAllStaff
+);
+userRoutes.delete("/staff/:id", auth(["admin"]), delet_staff);
 export default userRoutes;

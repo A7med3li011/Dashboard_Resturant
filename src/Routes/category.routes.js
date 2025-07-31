@@ -4,6 +4,7 @@ import {
   deleteCategory,
   getCategories,
   updateCategory,
+  getCategoryByid
 } from "../controllers/category.controller.js";
 import { auth } from "../middleware/auth/auth.js";
 import { multer4server } from "../services/multer.js";
@@ -31,4 +32,5 @@ categoryRoutes.put(
 );
 categoryRoutes.delete("/:id", auth(["admin"]), deleteCategory);
 categoryRoutes.get("/", auth(["admin", "customer", "staff"]), getCategories);
+categoryRoutes.get("/:id", auth(["admin", "customer", "staff"]), getCategoryByid);
 export default categoryRoutes;

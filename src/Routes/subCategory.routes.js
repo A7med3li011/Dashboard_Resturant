@@ -12,6 +12,7 @@ import {
   deleteSubCategory,
   getSubCategories,
   updateSubCategory,
+  getSubCategoriesbyCategory,
 } from "../controllers/subCategory.controller.js";
 
 const subCategoryRoutes = express.Router();
@@ -35,5 +36,10 @@ subCategoryRoutes.get(
   "/",
   auth(["admin", "customer", "staff"]),
   getSubCategories
+);
+subCategoryRoutes.get(
+  "/category/:categoryId",
+  auth(["admin", "customer", "staff"]),
+  getSubCategoriesbyCategory
 );
 export default subCategoryRoutes;
