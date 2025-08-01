@@ -15,13 +15,13 @@ const tablesRoutes = express.Router();
 tablesRoutes.post(
   "/",
   multer4server().single("image"),
-  auth(["admin", "staff"]),
+  auth(["admin"]),
   createTable
 );
-tablesRoutes.get("/", auth(["admin", "staff"]), getTables);
+tablesRoutes.get("/", auth(["admin", "waiter", "operation"]), getTables);
 tablesRoutes.put(
   "/:id",
-  auth(["admin", "staff"]),
+  auth(["admin", "waiter", "operation"]),
   validate(updateTableSchema),
   updateTable
 );

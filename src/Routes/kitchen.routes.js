@@ -14,6 +14,6 @@ kitchenRotes.post(
   auth(["admin"]),
   add_kitchen
 );
-kitchenRotes.get("/", auth(["admin", "staff"]), get_kitchens);
+kitchenRotes.get("/", auth(["admin","operation"]), get_kitchens);
 
 export default kitchenRotes;

@@ -7,15 +7,7 @@ import {
 
 const attendanceRoutes = express.Router();
 
-attendanceRoutes.post(
-  "/checkin",
-  auth(["staff", "operation", "waiter"]),
-  handleCheckIn
-);
-attendanceRoutes.post(
-  "/checkout",
-  auth(["staff", "operation", "waiter"]),
-  handleCheckOut
-);
+attendanceRoutes.post("/checkin", auth(["staff", "waiter"]), handleCheckIn);
+attendanceRoutes.post("/checkout", auth(["staff", "waiter"]), handleCheckOut);
 
 export default attendanceRoutes;

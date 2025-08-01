@@ -72,6 +72,10 @@ const orderSchema = new mongoose.Schema(
     location: {
       type: String,
     },
+    app: {
+      type: Boolean,
+      default: false,
+    },
     // createdBy: {
     //   type: mongoose.Schema.Types.ObjectId,
     //   ref: "Employee", // if staff create orders

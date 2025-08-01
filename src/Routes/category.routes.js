@@ -20,17 +20,17 @@ categoryRoutes.post(
   "/",
   multer4server().single("image"),
   validate(categorySchema),
-  auth(["admin"]),
+  auth(["admin","operation"]),
   createCategory
 );
 categoryRoutes.put(
   "/",
   multer4server().single("image"),
-  auth(["admin"]),
+  auth(["admin","operation"]),
   validate(updateCategorySchema),
   updateCategory
 );
-categoryRoutes.delete("/:id", auth(["admin"]), deleteCategory);
-categoryRoutes.get("/", auth(["admin", "customer", "staff"]), getCategories);
-categoryRoutes.get("/:id", auth(["admin", "customer", "staff"]), getCategoryByid);
+categoryRoutes.delete("/:id", auth(["admin","operation"]), deleteCategory);
+categoryRoutes.get("/", auth(["admin","operation"]), getCategories);
+categoryRoutes.get("/:id", auth(["admin","operation"]), getCategoryByid);
 export default categoryRoutes;

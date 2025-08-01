@@ -21,25 +21,21 @@ subCategoryRoutes.post(
   "/",
   multer4server().single("image"),
   validate(createSubCategorySchema),
-  auth(["admin"]),
+  auth(["admin","operation"]),
   createSubCategory
 );
 subCategoryRoutes.put(
   "/",
   multer4server().single("image"),
-  auth(["admin"]),
+  auth(["admin","operation"]),
   validate(updateSubCategorySchema),
   updateSubCategory
 );
-subCategoryRoutes.delete("/:id", auth(["admin"]), deleteSubCategory);
-subCategoryRoutes.get(
-  "/",
-  auth(["admin", "customer", "staff"]),
-  getSubCategories
-);
+subCategoryRoutes.delete("/:id", auth(["admin","operation"]), deleteSubCategory);
+subCategoryRoutes.get("/", auth(["admin","operation", "customer"]), getSubCategories);
 subCategoryRoutes.get(
   "/category/:categoryId",
-  auth(["admin", "customer", "staff"]),
+  auth(["admin","operation", "customer"]),
   getSubCategoriesbyCategory
 );
 export default subCategoryRoutes;

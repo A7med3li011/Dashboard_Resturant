@@ -14,26 +14,26 @@ const proudctRoutes = express.Router();
 proudctRoutes.post(
   "/",
   multer4server().single("image"),
-  auth(["admin"]),
+  auth(["admin", "operation"]),
   addProduct
 );
 proudctRoutes.put(
   "/:id",
   multer4server().single("image"),
-  auth(["admin"]),
+  auth(["admin", "operation"]),
   updateProduct
 );
 
 proudctRoutes.get(
   "/",
 
-  auth(["customer", "staff", "admin"]),
+  auth(["customer", "staff", "waiter", "admin", "operation"]),
   getProducts
 );
 proudctRoutes.get(
   "/bysubcat/:id",
 
-  auth(["customer", "staff", "admin"]),
+  auth(["customer", "admin", "operation"]),
   getProductsbySub
 );
 

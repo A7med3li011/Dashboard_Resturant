@@ -15,31 +15,31 @@ const orderRoutes = express.Router();
 
 orderRoutes.post(
   "/",
-  auth(["customer", "admin", "staff"]),
+  auth(["customer", "admin","waiter","operation"]),
   validate(createOrderSchema),
   createOrder
 );
 orderRoutes.put(
   "/:id",
-  auth(["admin", "staff"]),
+  auth(["admin","operation"]),
 
   updateOrder
 );
 orderRoutes.patch(
   "/",
-  auth(["admin", "staff"]),
+  auth(["admin","operation", "staff","waiter"]),
 
   updateOrderStatus
 );
 orderRoutes.get(
   "/getbykitchen/:id",
-  auth(["admin", "staff"]),
+  auth(["admin","operation", "staff"]),
   //   validate(createOrderSchema),
   getOrderBYKitchen
 );
 orderRoutes.get(
   "/",
-  auth(["admin", "staff"]),
+  auth(["admin","operation","waiter"]),
   //   validate(createOrderSchema),
   getAllOrders
 );
