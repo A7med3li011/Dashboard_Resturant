@@ -4,9 +4,10 @@ import {
   deleteCategory,
   getCategories,
   updateCategory,
-  getCategoryByid
+  getCategoryByid,
 } from "../controllers/category.controller.js";
 import { auth } from "../middleware/auth/auth.js";
+import { checkRole } from "../middleware/auth/roleAuth.js";
 import { multer4server } from "../services/multer.js";
 import { validate } from "../middleware/validation/execution.js";
 import {
@@ -20,17 +21,34 @@ categoryRoutes.post(
   "/",
   multer4server().single("image"),
   validate(categorySchema),
-  auth(["admin"]),
+  auth(["admin", "operation"]),
+  checkRole(["admin", "operation"]),
   createCategory
 );
 categoryRoutes.put(
   "/",
   multer4server().single("image"),
-  auth(["admin"]),
+  auth(["admin", "operation"]),
+  checkRole(["admin", "operation"]),
   validate(updateCategorySchema),
   updateCategory
 );
-categoryRoutes.delete("/:id", auth(["admin"]), deleteCategory);
-categoryRoutes.get("/", auth(["admin", "customer", "staff"]), getCategories);
-categoryRoutes.get("/:id", auth(["admin", "customer", "staff"]), getCategoryByid);
+categoryRoutes.delete(
+  "/:id",
+  auth(["admin", "operation"]),
+  checkRole(["admin", "operation"]),
+  deleteCategory
+);
+categoryRoutes.get(
+  "/",
+  auth(["admin", "operation", "waiter"]),
+  checkRole(["admin", "operation", "waiter"]),
+  getCategories
+);
+categoryRoutes.get(
+  "/:id",
+  auth(["admin", "operation", "waiter"]),
+  checkRole(["admin", "operation", "waiter"]),
+  getCategoryByid
+);
 export default categoryRoutes;

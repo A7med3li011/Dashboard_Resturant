@@ -18,6 +18,7 @@ import {
   updateUserSchema,
 } from "../middleware/validation/schema.js";
 import { auth } from "../middleware/auth/auth.js";
+import { checkRole } from "../middleware/auth/roleAuth.js";
 import { multer4server } from "../services/multer.js";
 
 const userRoutes = express.Router();
@@ -27,12 +28,14 @@ userRoutes.get("/getuser/:id", handlegetUser);
 userRoutes.post(
   "/addStaff",
   auth(["admin"]),
+  checkRole(["admin"]),
   validate(staffValidationSchema),
   handle_add_staff
 );
 userRoutes.put(
   "/updateStaff/:id",
   auth(["admin"]),
+  checkRole(["admin"]),
   validate(updatestaffValidationSchema),
   handle_update_staff
 );
@@ -47,10 +50,9 @@ userRoutes.put(
 );
 userRoutes.get(
   "/staff",
-
-  auth(["staff", "admin"]),
-
+  auth(["admin", "operation"]),
+  checkRole(["admin", "operation"]),
   handlegetAllStaff
 );
-userRoutes.delete("/staff/:id", auth(["admin"]), delet_staff);
+userRoutes.delete("/staff/:id", auth(["admin"]), checkRole(["admin"]), delet_staff);
 export default userRoutes;

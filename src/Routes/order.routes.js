@@ -10,37 +10,39 @@ import {
 import { validate } from "../middleware/validation/execution.js";
 import { createOrderSchema } from "../middleware/validation/schema.js";
 import { auth } from "../middleware/auth/auth.js";
+import { checkRole } from "../middleware/auth/roleAuth.js";
 
 const orderRoutes = express.Router();
 
 orderRoutes.post(
   "/",
-  auth(["customer", "admin", "staff"]),
+  auth(["admin", "operation", "waiter"]),
+  checkRole(["admin", "operation", "waiter"]),
   validate(createOrderSchema),
   createOrder
 );
 orderRoutes.put(
   "/:id",
-  auth(["admin", "staff"]),
-
+  auth(["admin", "operation", "waiter"]),
+  checkRole(["admin", "operation", "waiter"]),
   updateOrder
 );
 orderRoutes.patch(
   "/",
-  auth(["admin", "staff"]),
-
+  auth(["admin", "operation", "waiter"]),
+  checkRole(["admin", "operation", "waiter"]),
   updateOrderStatus
 );
 orderRoutes.get(
   "/getbykitchen/:id",
-  auth(["admin", "staff"]),
-  //   validate(createOrderSchema),
+  auth(["admin", "staff", "operation"]),
+  checkRole(["admin", "staff", "operation"]),
   getOrderBYKitchen
 );
 orderRoutes.get(
   "/",
-  auth(["admin", "staff"]),
-  //   validate(createOrderSchema),
+  auth(["admin", "operation", "waiter"]),
+  checkRole(["admin", "operation", "waiter"]),
   getAllOrders
 );
 
