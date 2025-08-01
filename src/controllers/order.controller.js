@@ -4,6 +4,8 @@ import productModel from "../../DataBase/models/product.model.js";
 import { AppError } from "../utilities/AppError.js";
 import { handlerAsync } from "../utilities/handleAsync.js";
 import tableModel from "../../DataBase/models/Tables.model.js";
+import userModel from "../../DataBase/models/user.model.js";
+
 export const createOrder = handlerAsync(async (req, res, next) => {
   const { items, orderType, location, table } = req.body;
   let totalPrice = 0;
@@ -87,9 +89,17 @@ export const getAllOrders = handlerAsync(async (req, res, next) => {
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
 
+  const from = req.query.from;
+  let query = {};
+  if (from == 1) {
+    query = { fromApp: true };
+  } else {
+    query = { $or: [{ fromApp: false }, { fromApp: { $exists: false } }] };
+  }
+  console.log(from == true);
   const [orders, totalOrders] = await Promise.all([
     orderMdoel
-      .find()
+      .find(query)
       .sort({ createdAt: -1 })
       .populate({ path: "customer", select: "name" })
       .populate({ path: "items.product", select: "title price" })
@@ -110,6 +120,257 @@ export const getAllOrders = handlerAsync(async (req, res, next) => {
       totalPages: Math.ceil(totalOrders / limit),
     },
   });
+});
+export const getAllOrdersStats = handlerAsync(async (req, res, next) => {
+  const topProductsStats = await orderMdoel.aggregate([
+    { $unwind: "$items" },
+    {
+      $group: {
+        _id: "$items.product",
+        value: { $sum: { $ifNull: ["$items.quantity", 1] } },
+      },
+    },
+    { $sort: { value: -1 } },
+    { $limit: 5 },
+    {
+      $lookup: {
+        from: "products", // Make sure this matches your actual collection name
+        localField: "_id",
+        foreignField: "_id",
+        as: "productDetails",
+      },
+    },
+    { $unwind: "$productDetails" },
+    {
+      $project: {
+        productId: "$_id",
+        value: 1,
+        name: "$productDetails.title",
+        // image: "$productDetails.image",
+        _id: 0,
+      },
+    },
+  ]);
+
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const [
+    todayOrderCount,
+    countOfCustomer,
+    ordersPricing,
+    allRodersCount,
+    countStaff,
+    countOperators,
+    countWaiter,
+  ] = await Promise.all([
+    orderMdoel.countDocuments({
+      createdAt: { $gte: startOfDay, $lte: endOfDay },
+    }),
+
+    userModel.countDocuments({ role: "customer" }),
+    orderMdoel.find().select("totalPrice"),
+    orderMdoel.countDocuments(),
+    userModel.countDocuments({ role: "staff" }),
+    userModel.countDocuments({ role: "operation" }),
+    userModel.countDocuments({ role: "waiter" }),
+  ]);
+
+  const revenue = ordersPricing.reduce(
+    (acc, curr) => acc + curr?.totalPrice,
+    0
+  );
+  res.status(200).json({
+    message: "data success",
+    data: topProductsStats,
+    countOfCustomer,
+    todayOrderCount,
+    revenue,
+    allRodersCount,
+    countStaff,
+    countOperators,
+    countWaiter,
+  });
+});
+
+const dayMap = {
+  1: "Sun", // MongoDB $dayOfWeek: 1 = Sunday
+  2: "Mon", // 2 = Monday
+  3: "Tue", // 3 = Tuesday
+  4: "Wed", // 4 = Wednesday
+  5: "Thu", // 5 = Thursday
+  6: "Fri", // 6 = Friday
+  7: "Sat", // 7 = Saturday
+};
+
+const getEgyptDate = () => {
+  const now = new Date();
+  const egyptTime = new Date(
+    now.toLocaleString("en-US", { timeZone: "Africa/Cairo" })
+  );
+  return egyptTime;
+};
+
+export const getWeeklyOrder = handlerAsync(async (req, res, next) => {
+  const now = getEgyptDate();
+  const day = now.getDay(); // Sunday = 0
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Monday as start of week
+
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(diff);
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
+
+  // Convert to UTC for MongoDB query to avoid timezone issues
+  const startOfWeekUTC = new Date(
+    startOfWeek.getTime() - startOfWeek.getTimezoneOffset() * 60000
+  );
+  const endOfWeekUTC = new Date(
+    endOfWeek.getTime() - endOfWeek.getTimezoneOffset() * 60000
+  );
+
+  const orders = await orderMdoel.aggregate([
+    {
+      $match: {
+        createdAt: {
+          $gte: startOfWeekUTC,
+          $lte: endOfWeekUTC,
+        },
+      },
+    },
+    {
+      $addFields: {
+        // Convert to Egypt timezone before extracting day
+        egyptDate: {
+          $dateToString: {
+            date: "$createdAt",
+            timezone: "Africa/Cairo",
+          },
+        },
+      },
+    },
+    {
+      $addFields: {
+        egyptDateObj: {
+          $dateFromString: {
+            dateString: "$egyptDate",
+          },
+        },
+      },
+    },
+    {
+      $group: {
+        _id: { $dayOfWeek: "$egyptDateObj" }, // Now using Egypt timezone
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  const dailyOrdersData = [
+    { day: "Mon", orders: 0 },
+    { day: "Tue", orders: 0 },
+    { day: "Wed", orders: 0 },
+    { day: "Thu", orders: 0 },
+    { day: "Fri", orders: 0 },
+    { day: "Sat", orders: 0 },
+    { day: "Sun", orders: 0 },
+  ];
+
+  orders.forEach(({ _id, count }) => {
+    const dayLabel = dayMap[_id];
+    const entry = dailyOrdersData.find((d) => d.day === dayLabel);
+    if (entry) entry.orders = count;
+  });
+
+  res.status(200).json(dailyOrdersData);
+});
+const monthNames = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+export const revenueMonthly = handlerAsync(async (req, res, next) => {
+  // Generate the last 6 months
+  const generateLast6Months = () => {
+    const months = [];
+    const now = new Date();
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        year: date.getFullYear(),
+        month: date.getMonth() + 1, // MongoDB months are 1-indexed
+        monthName: monthNames[date.getMonth()],
+      });
+    }
+    return months;
+  };
+
+  const last6Months = generateLast6Months();
+
+  // Get actual revenue data
+  const revenueData = await orderMdoel.aggregate([
+    {
+      $addFields: {
+        egyptDate: {
+          $dateToParts: {
+            date: "$createdAt",
+            timezone: "Africa/Cairo",
+          },
+        },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          year: "$egyptDate.year",
+          month: "$egyptDate.month",
+        },
+        revenue: { $sum: "$totalPrice" },
+        orders: { $sum: 1 },
+      },
+    },
+  ]);
+
+  // Create a map of existing data for quick lookup
+  const revenueMap = new Map();
+  revenueData.forEach(item => {
+    const key = `${item._id.year}-${item._id.month}`;
+    revenueMap.set(key, {
+      revenue: item.revenue,
+      orders: item.orders,
+    });
+  });
+
+  // Merge generated months with actual data
+  const result = last6Months.map(monthInfo => {
+    const key = `${monthInfo.year}-${monthInfo.month}`;
+    const data = revenueMap.get(key);
+    
+    return {
+      month: monthInfo.monthName,
+      revenue: data ? data.revenue : 0,
+      orders: data ? data.orders : 0,
+    };
+  });
+
+  res.status(200).json(result);
 });
 
 export const getOrderBYKitchen = handlerAsync(async (req, res, next) => {
