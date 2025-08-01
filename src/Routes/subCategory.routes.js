@@ -1,6 +1,7 @@
 import express from "express";
 
 import { auth } from "../middleware/auth/auth.js";
+import { checkRole } from "../middleware/auth/roleAuth.js";
 import { multer4server } from "../services/multer.js";
 import { validate } from "../middleware/validation/execution.js";
 import {
@@ -21,25 +22,34 @@ subCategoryRoutes.post(
   "/",
   multer4server().single("image"),
   validate(createSubCategorySchema),
-  auth(["admin"]),
+  auth(["admin", "operation"]),
+  checkRole(["admin", "operation"]),
   createSubCategory
 );
 subCategoryRoutes.put(
   "/",
   multer4server().single("image"),
-  auth(["admin"]),
+  auth(["admin", "operation"]),
+  checkRole(["admin", "operation"]),
   validate(updateSubCategorySchema),
   updateSubCategory
 );
-subCategoryRoutes.delete("/:id", auth(["admin"]), deleteSubCategory);
+subCategoryRoutes.delete(
+  "/:id",
+  auth(["admin", "operation"]),
+  checkRole(["admin", "operation"]),
+  deleteSubCategory
+);
 subCategoryRoutes.get(
   "/",
-  auth(["admin", "customer", "staff"]),
+  auth(["admin", "operation", "waiter"]),
+  checkRole(["admin", "operation", "waiter"]),
   getSubCategories
 );
 subCategoryRoutes.get(
   "/category/:categoryId",
-  auth(["admin", "customer", "staff"]),
+  auth(["admin", "operation", "waiter"]),
+  checkRole(["admin", "operation", "waiter"]),
   getSubCategoriesbyCategory
 );
 export default subCategoryRoutes;

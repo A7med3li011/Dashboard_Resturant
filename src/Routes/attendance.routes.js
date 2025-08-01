@@ -1,5 +1,6 @@
 import express from "express";
 import { auth } from "../middleware/auth/auth.js";
+import { checkRole } from "../middleware/auth/roleAuth.js";
 import {
   handleCheckIn,
   handleCheckOut,
@@ -9,12 +10,14 @@ const attendanceRoutes = express.Router();
 
 attendanceRoutes.post(
   "/checkin",
-  auth(["staff", "operation", "waiter"]),
+  auth(["admin", "staff", "operation", "waiter"]),
+  checkRole(["admin", "staff", "operation", "waiter"]),
   handleCheckIn
 );
 attendanceRoutes.post(
   "/checkout",
-  auth(["staff", "operation", "waiter"]),
+  auth(["admin", "staff", "operation", "waiter"]),
+  checkRole(["admin", "staff", "operation", "waiter"]),
   handleCheckOut
 );
 
