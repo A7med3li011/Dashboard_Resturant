@@ -76,6 +76,10 @@ const orderSchema = new mongoose.Schema(
     //   type: mongoose.Schema.Types.ObjectId,
     //   ref: "Employee", // if staff create orders
     // },
+    fromApp: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
