@@ -42,14 +42,14 @@ subCategoryRoutes.delete(
 );
 subCategoryRoutes.get(
   "/",
-  auth(["admin", "operation", "waiter"]),
-  checkRole(["admin", "operation", "waiter"]),
+  auth(["admin", "operation", "waiter", "customer"]),
+  checkRole(["admin", "operation", "waiter", "customer"]),
   getSubCategories
 );
 subCategoryRoutes.get(
   "/category/:categoryId",
-  auth(["admin", "operation", "waiter"]),
-  checkRole(["admin", "operation", "waiter"]),
+  auth(["admin", "operation", "waiter", "customer"]),
+  checkRole(["admin", "operation", "waiter", "customer"]),
   getSubCategoriesbyCategory
 );
 export default subCategoryRoutes;

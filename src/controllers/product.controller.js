@@ -1,4 +1,5 @@
 import categoryModel from "../../DataBase/models/category.model.js";
+import orderMdoel from "../../DataBase/models/order.mdoel.js";
 import productModel from "../../DataBase/models/product.model.js";
 import subCategoryModel from "../../DataBase/models/subCategory.model.js";
 import { AppError } from "../utilities/AppError.js";
@@ -55,7 +56,19 @@ export const getProducts = handlerAsync(async (req, res, next) => {
   const products = await productModel
     .find()
     .populate("kitchen")
-    .populate("category").populate("subCategory");
+    .populate("category")
+    .populate("subCategory");
+  res
+    .status(200)
+    .json({ message: "product founded sucessfully", data: products });
+});
+export const getProductsbyId = handlerAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const products = await productModel
+    .findById(id)
+    .populate("kitchen")
+    .populate("category")
+    .populate("subCategory");
   res
     .status(200)
     .json({ message: "product founded sucessfully", data: products });
@@ -69,4 +82,52 @@ export const getProductsbySub = handlerAsync(async (req, res, next) => {
   res
     .status(200)
     .json({ message: "product founded sucessfully", data: products });
+});
+export const getProductbestSaller = handlerAsync(async (req, res, next) => {
+  const topProductStats = await orderMdoel.aggregate([
+    { $unwind: "$items" },
+    {
+      $group: {
+        _id: "$items.product",
+        value: { $sum: { $ifNull: ["$items.quantity", 1] } },
+      },
+    },
+    { $sort: { value: -1 } },
+    { $limit: 1 }, // Changed from 5 to 1 to get only the top seller
+    {
+      $lookup: {
+        from: "products", // Make sure this matches your actual collection name
+        localField: "_id",
+        foreignField: "_id",
+        as: "productDetails",
+      },
+    },
+    { $unwind: "$productDetails" },
+    {
+      $project: {
+        productId: "$_id",
+        value: 1,
+        name: "$productDetails.title",
+        // image: "$productDetails.image",
+        _id: 0,
+      },
+    },
+  ]);
+
+  // Since we're getting only one product, you might want to return it as a single object
+  let bestSeller = topProductStats[0] || null;
+
+  if (bestSeller) {
+    const productDetails = await productModel
+      .findById(bestSeller.productId)
+      .populate("category")
+      .populate("subCategory");
+
+    bestSeller.product = productDetails;
+  }
+
+  res.status(200).json({
+    message: "Best selling product found successfully",
+    data: bestSeller,
+  });
 });
