@@ -9,6 +9,7 @@ import {
   getProductsbyId,
   getProductsbySub,
   updateProduct,
+  getProductbestSaller
 } from "../controllers/product.controller.js";
 
 const proudctRoutes = express.Router();
@@ -34,6 +35,13 @@ proudctRoutes.get(
   checkRole(["admin", "operation", "waiter", "customer"]),
   getProducts
 );
+proudctRoutes.get(
+  "/best/saller/prodcut",
+  auth(["admin", "operation", "waiter", "customer"]),
+  checkRole(["admin", "operation", "waiter", "customer"]),
+  getProductbestSaller
+);
+
 proudctRoutes.get(
   "/bysubcat/:id",
   auth(["admin", "operation", "waiter", "customer"]),
