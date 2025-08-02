@@ -6,6 +6,7 @@ import { multer4server } from "../services/multer.js";
 import {
   addProduct,
   getProducts,
+  getProductsbyId,
   getProductsbySub,
   updateProduct,
 } from "../controllers/product.controller.js";
@@ -38,6 +39,12 @@ proudctRoutes.get(
   auth(["admin", "operation", "waiter", "customer"]),
   checkRole(["admin", "operation", "waiter", "customer"]),
   getProductsbySub
+);
+proudctRoutes.get(
+  "/:id",
+  auth(["admin", "operation", "waiter", "customer"]),
+  checkRole(["admin", "operation", "waiter", "customer"]),
+  getProductsbyId
 );
 
 export default proudctRoutes;

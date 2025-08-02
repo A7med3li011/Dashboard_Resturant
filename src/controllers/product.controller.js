@@ -55,7 +55,19 @@ export const getProducts = handlerAsync(async (req, res, next) => {
   const products = await productModel
     .find()
     .populate("kitchen")
-    .populate("category").populate("subCategory");
+    .populate("category")
+    .populate("subCategory");
+  res
+    .status(200)
+    .json({ message: "product founded sucessfully", data: products });
+});
+export const getProductsbyId = handlerAsync(async (req, res, next) => {
+  const {id} = req.params
+  const products = await productModel
+    .findById(id)
+    .populate("kitchen")
+    .populate("category")
+    .populate("subCategory");
   res
     .status(200)
     .json({ message: "product founded sucessfully", data: products });
