@@ -29,14 +29,14 @@ proudctRoutes.put(
 
 proudctRoutes.get(
   "/",
-  auth(["admin", "operation", "waiter"]),
-  checkRole(["admin", "operation", "waiter"]),
+  auth(["admin", "operation", "waiter", "customer"]),
+  checkRole(["admin", "operation", "waiter", "customer"]),
   getProducts
 );
 proudctRoutes.get(
   "/bysubcat/:id",
-  auth(["admin", "operation", "waiter"]),
-  checkRole(["admin", "operation", "waiter"]),
+  auth(["admin", "operation", "waiter", "customer"]),
+  checkRole(["admin", "operation", "waiter", "customer"]),
   getProductsbySub
 );
 

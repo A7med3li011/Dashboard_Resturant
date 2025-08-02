@@ -90,24 +90,62 @@ export const getAllOrders = handlerAsync(async (req, res, next) => {
   const skip = (page - 1) * limit;
 
   const from = req.query.from;
+  const search = req.query.search;
+
+  // Build base query for fromApp filter
   let query = {};
   if (from == 1) {
     query = { fromApp: true };
   } else {
     query = { $or: [{ fromApp: false }, { fromApp: { $exists: false } }] };
   }
-  console.log(from == true);
+
+  // If search is provided, find matching customers and tables first
+  if (search && search.trim()) {
+    const searchRegex = new RegExp(search.trim(), "i");
+
+    // Find matching customers and tables in parallel
+    const [matchingCustomers, matchingTables] = await Promise.all([
+      // Replace 'Customer' with your actual customer model
+      userModel.find({ name: searchRegex }).select("_id").lean(),
+      // Replace 'Table' with your actual table model
+      tableModel.find({ title: searchRegex }).select("_id").lean(),
+    ]);
+
+    const customerIds = matchingCustomers.map((c) => c._id);
+    const tableIds = matchingTables.map((t) => t._id);
+
+    // Add search conditions to the main query
+    const searchConditions = [{ OrderNumber: searchRegex }];
+
+    if (customerIds.length > 0) {
+      searchConditions.push({ customer: { $in: customerIds } });
+    }
+
+    if (tableIds.length > 0) {
+      searchConditions.push({ table: { $in: tableIds } });
+    }
+
+    // Combine with existing query using $and
+    query = {
+      $and: [
+        query, // existing fromApp filter
+        { $or: searchConditions },
+      ],
+    };
+  }
+
   const [orders, totalOrders] = await Promise.all([
     orderMdoel
       .find(query)
       .sort({ createdAt: -1 })
       .populate({ path: "customer", select: "name" })
       .populate({ path: "items.product", select: "title price" })
-      .populate("table")
+      .populate("table", "title")
       .skip(skip)
       .limit(limit)
       .lean(),
-    orderMdoel.countDocuments(),
+    orderMdoel.countDocuments(query), // Use the same query for count
   ]);
 
   res.status(200).json({
@@ -310,7 +348,7 @@ export const revenueMonthly = handlerAsync(async (req, res, next) => {
   const generateLast6Months = () => {
     const months = [];
     const now = new Date();
-    
+
     for (let i = 5; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
       months.push({
@@ -350,7 +388,7 @@ export const revenueMonthly = handlerAsync(async (req, res, next) => {
 
   // Create a map of existing data for quick lookup
   const revenueMap = new Map();
-  revenueData.forEach(item => {
+  revenueData.forEach((item) => {
     const key = `${item._id.year}-${item._id.month}`;
     revenueMap.set(key, {
       revenue: item.revenue,
@@ -359,10 +397,10 @@ export const revenueMonthly = handlerAsync(async (req, res, next) => {
   });
 
   // Merge generated months with actual data
-  const result = last6Months.map(monthInfo => {
+  const result = last6Months.map((monthInfo) => {
     const key = `${monthInfo.year}-${monthInfo.month}`;
     const data = revenueMap.get(key);
-    
+
     return {
       month: monthInfo.monthName,
       revenue: data ? data.revenue : 0,
