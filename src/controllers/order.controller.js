@@ -84,26 +84,35 @@ export const updateOrderStatus = handlerAsync(async (req, res, next) => {
 
   res.status(200).json({ message: "order updated successfully" });
 });
+
 export const getAllOrders = handlerAsync(async (req, res, next) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
-
   const from = req.query.from;
   const search = req.query.search;
 
-  // Build base query for fromApp filter
+  // Build base query for fromApp and orderType filter
   let query = {};
-  if (from == 1) {
-    query = { fromApp: true };
-  } else {
-    query = { $or: [{ fromApp: false }, { fromApp: { $exists: false } }] };
+
+  if (from === "true" || from === true) {
+    // Get only orders from app with delivery type
+    query = {
+      fromApp: false,
+      orderType: "delivery",
+    };
+  } else if (from === "false" || from === false) {
+    // Get only orders from website with dine-in type (note: dine-in with hyphen)
+    query = {
+      $or: [{ fromApp: false }, { fromApp: { $exists: false } }],
+      orderType: "dine-in",
+    };
   }
+  // If from is not provided, get all orders (no filter applied)
 
   // If search is provided, find matching customers and tables first
   if (search && search.trim()) {
     const searchRegex = new RegExp(search.trim(), "i");
-
     // Find matching customers and tables in parallel
     const [matchingCustomers, matchingTables] = await Promise.all([
       // Replace 'Customer' with your actual customer model
@@ -111,42 +120,70 @@ export const getAllOrders = handlerAsync(async (req, res, next) => {
       // Replace 'Table' with your actual table model
       tableModel.find({ title: searchRegex }).select("_id").lean(),
     ]);
-
     const customerIds = matchingCustomers.map((c) => c._id);
     const tableIds = matchingTables.map((t) => t._id);
-
     // Add search conditions to the main query
     const searchConditions = [{ OrderNumber: searchRegex }];
-
     if (customerIds.length > 0) {
       searchConditions.push({ customer: { $in: customerIds } });
     }
-
     if (tableIds.length > 0) {
       searchConditions.push({ table: { $in: tableIds } });
     }
 
-    // Combine with existing query using $and
-    query = {
-      $and: [
-        query, // existing fromApp filter
-        { $or: searchConditions },
-      ],
-    };
+    // Combine with existing query using $and only if there's a filter
+    if (Object.keys(query).length > 0) {
+      query = {
+        $and: [
+          query, // existing fromApp and orderType filter
+          { $or: searchConditions },
+        ],
+      };
+    } else {
+      // If no filter, just use search conditions
+      query = { $or: searchConditions };
+    }
   }
 
-  const [orders, totalOrders] = await Promise.all([
+  // First, get ALL matching orders without pagination to sort them properly
+  const [allOrders, totalOrders] = await Promise.all([
     orderMdoel
       .find(query)
-      .sort({ createdAt: -1 })
-      .populate({ path: "customer", select: "name" })
+      .populate({
+        path: "customer",
+        select: `name ${
+          from === "true" || from === true ? "phone address" : ""
+        }`,
+      })
       .populate({ path: "items.product", select: "title price" })
       .populate("table", "title")
-      .skip(skip)
-      .limit(limit)
       .lean(),
-    orderMdoel.countDocuments(query), // Use the same query for count
+    orderMdoel.countDocuments(query),
   ]);
+
+  // Sort ALL orders by status: pending -> preparing -> completed -> ready -> canceled
+  allOrders.sort((a, b) => {
+    const statusOrder = [
+      "pending",
+      "preparing",
+      "completed",
+      "ready",
+      "canceled",
+    ];
+    const aIndex = statusOrder.indexOf(a.status?.toLowerCase());
+    const bIndex = statusOrder.indexOf(b.status?.toLowerCase());
+    // If status not found, put at end
+    const aPos = aIndex === -1 ? 999 : aIndex;
+    const bPos = bIndex === -1 ? 999 : bIndex;
+    if (aPos !== bPos) {
+      return aPos - bPos;
+    }
+    // If same status, sort by newest first
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+
+  // THEN apply pagination to the sorted results
+  const orders = allOrders.slice(skip, skip + limit);
 
   res.status(200).json({
     message: "Orders found successfully",
@@ -159,6 +196,7 @@ export const getAllOrders = handlerAsync(async (req, res, next) => {
     },
   });
 });
+
 export const getAllOrdersStats = handlerAsync(async (req, res, next) => {
   const topProductsStats = await orderMdoel.aggregate([
     { $unwind: "$items" },

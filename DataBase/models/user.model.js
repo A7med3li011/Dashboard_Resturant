@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema(
     salary: { type: Number },
     shiftFrom: { type: String },
     shiftTo: { type: String },
+    address: { type: String },
     age: { type: Number },
 
     role: {

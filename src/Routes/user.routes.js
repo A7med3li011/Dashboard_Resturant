@@ -54,5 +54,10 @@ userRoutes.get(
   checkRole(["admin", "operation"]),
   handlegetAllStaff
 );
-userRoutes.delete("/staff/:id", auth(["admin"]), checkRole(["admin"]), delet_staff);
+userRoutes.delete(
+  "/staff/:id",
+  auth(["admin"]),
+  checkRole(["admin"]),
+  delet_staff
+);
 export default userRoutes;
